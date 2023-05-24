@@ -32,13 +32,19 @@ export class EtherscanService {
         })
     }
 
-    async getTransactions(): Promise<string> {
+    async getBlockNumbers(numOfBlocks: number): Promise<string[]> {
         const endBlock: number = (await axios.get(
             `${this.etherscanApi}?module=proxy&action=eth_blockNumber`
         )).data.result;
-        const startBlock: number = endBlock - 100;
+
+        const startBlock: number = endBlock - numOfBlocks;
         const diff: number = endBlock - startBlock;
-        const blockNumbers: string[] = Array.from({ length: diff }, (v, k) => (k + startBlock + 1).toString(16));
+
+        return Array.from({ length: diff }, (v, k) => (k + startBlock + 1).toString(16));
+    }
+
+    async getTransactions(): Promise<string> {
+        const blockNumbers: string[] = await this.getBlockNumbers(100);
 
         const blockPromises = blockNumbers.map((num: string) => {
             let endpoint = `${this.etherscanApi}?module=proxy&action=eth_getBlockByNumber&tag=${num}&boolean=true&apikey=${this.apiKey}`;
