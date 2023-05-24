@@ -3,6 +3,10 @@ import { IsNotEmpty, IsString } from "class-validator";
 export class TransactionDto {
     @IsNotEmpty()
     @IsString()
+    public hash: string;
+
+    @IsNotEmpty()
+    @IsString()
     public from: string;
 
     @IsNotEmpty()

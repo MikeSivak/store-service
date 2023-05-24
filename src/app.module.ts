@@ -7,6 +7,7 @@ import { TypeormService } from './shared/typeorm/typeorm.service';
 import { ConfigModule } from '@nestjs/config/dist';
 import { TransactionsModule } from './modules/transactions/transactions.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EtherscanModule } from './modules/etherscan/etherscan.module';
 
 @Module({
   imports: [
@@ -15,11 +16,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     ConfigModule.forRoot({ isGlobal: true }),
     TransactionsModule,
     TypeOrmModule.forRootAsync({ useClass: TypeormService }),
+    EtherscanModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
-    TypeormService
   ],
 })
 export class AppModule { }

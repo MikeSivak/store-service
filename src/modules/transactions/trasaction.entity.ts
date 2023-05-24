@@ -1,14 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Unique, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
+@Unique(['hash'])
 export class Transaction {
     @PrimaryGeneratedColumn()
     public id!: number;
 
     @Column({ type: 'varchar', length: 120 })
-    public from: string;
+    public hash: string;
 
     @Column({ type: 'varchar', length: 120 })
+    public from: string;
+
+    @Column({ type: 'varchar', length: 120, nullable: true })
     public to: string;
 
     @Column({ type: 'varchar', length: 120 })
