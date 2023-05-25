@@ -75,16 +75,33 @@ export class EtherscanService {
     }
 
     async getBlockAddress(): Promise<any> {
-        let blockNumbers: string[] = await this.getHexBlockNumbers(100);
-        blockNumbers = blockNumbers.map(num => `0x${num}`);
-        console.log('-------- GET BLOCK ADDRESS --------')
-        console.log(blockNumbers);
-        // 1. get 100 last block transactions from the database
-        const result: Transaction[] = await this.transactionsService.getTransactionsByBlockNumbers(blockNumbers);
-        // 2. sum all transaction values in each block and return array with objects = { blockNumber: <value>, sum: <value> }
-        // 3. compare all amounts of transactions.
-        // 4. return the blockNumber that has the greater value
+        let blockNumbers: string[] = (await this.getHexBlockNumbers(100)).map(num => `0x${num}`);
+        const transactions: Transaction[] = await this.transactionsService.getTransactionsByBlockNumbers(blockNumbers);
+        const amountArr: any = [];
 
-        return result;
+        for (let i: number = 0; i < blockNumbers.length; i++) {
+            let sum: number = 0;
+            transactions.map((t: Transaction) => {
+                if (blockNumbers[i] === t.blockNumber) {
+                    sum += parseInt(t.value);
+                }
+            });
+            amountArr.push({
+                blockNumber: blockNumbers[i],
+                sum: sum,
+            });
+            sum = 0;
+        }
+
+        let max: number = 0;
+        let address: string;
+        for (let i: number = 0; i < amountArr.length; i++) {
+            if (amountArr[i].sum > max) {
+                max = amountArr[i].sum;
+                address = amountArr[i].blockNumber;
+            }
+        }
+
+        return { address };
     }
 }
