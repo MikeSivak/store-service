@@ -11,12 +11,14 @@ export class TransactionsService {
         private readonly transactionRepository: Repository<Transaction>,
     ) { }
 
-    async saveTransactions(transactions: TransactionDto[]): Promise<InsertResult> {
+    async saveTransactions(transactions: TransactionDto[]): Promise<Promise<(TransactionDto & Transaction)[]>> {
+        return await this.transactionRepository.save(transactions, { chunk: 10000 });
+    }
+
+    async getTransactionsByBlockNumbers(blockNumbers: string[]): Promise<Transaction[]> {
         return await this.transactionRepository
-            .createQueryBuilder()
-            .insert()
-            .into(Transaction)
-            .values(transactions)
-            .execute();
+            .createQueryBuilder('transaction')
+            .where('transaction.blockNumber in (:...blockNumbers)', { blockNumbers: [...blockNumbers] })
+            .getMany();
     }
 }

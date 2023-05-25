@@ -4,7 +4,7 @@ import axios, { AxiosResponse } from 'axios';
 import Bottleneck from 'bottleneck';
 import { TransactionsService } from '../transactions/transactions.service';
 import { Transaction } from '../transactions/trasaction.entity';
-import { InsertResult } from 'typeorm';
+import { TransactionDto } from '../transactions/transaction.dto';
 
 
 @Injectable()
@@ -32,7 +32,7 @@ export class EtherscanService {
         })
     }
 
-    async getBlockNumbers(numOfBlocks: number): Promise<string[]> {
+    async getHexBlockNumbers(numOfBlocks: number): Promise<string[]> {
         const endBlock: number = (await axios.get(
             `${this.etherscanApi}?module=proxy&action=eth_blockNumber`
         )).data.result;
@@ -44,32 +44,47 @@ export class EtherscanService {
     }
 
     async getTransactions(): Promise<string> {
-        const blockNumbers: string[] = await this.getBlockNumbers(100);
-
+        const blockNumbers: string[] = await this.getHexBlockNumbers(100);
         const blockPromises = blockNumbers.map((num: string) => {
             let endpoint = `${this.etherscanApi}?module=proxy&action=eth_getBlockByNumber&tag=${num}&boolean=true&apikey=${this.apiKey}`;
             return this.scheduleRequest(endpoint);
         });
 
-        const result: Transaction[] = (await Promise.all(blockPromises)).map((block: AxiosResponse<any, any>) => {
-            const transactions: any = block.data.result.transactions?.map((t: any) => {
-                return {
+        const transactions: TransactionDto[] = [];
+
+        (await Promise.all(blockPromises)).map((block: AxiosResponse<any, any>) => {
+            block.data.result.transactions?.map((t: TransactionDto) => {
+                const transaction: TransactionDto = {
                     hash: t.hash,
                     blockNumber: t.blockNumber,
                     from: t.from,
                     to: t.to,
                     value: t.value
                 }
+                transactions.push(transaction)
             });
-            return transactions;
-        })[0];
+        });
 
-        const savedTransactions: InsertResult = await this.transactionsService.saveTransactions(result);
+        const savedTransactions: Transaction[] = await this.transactionsService.saveTransactions(transactions);
 
-        Logger.log(`${savedTransactions.identifiers.length} transactions were saved in the database`);
+        Logger.log(`${savedTransactions.length} transactions were saved in the database`);
 
         return savedTransactions
-            ? `${savedTransactions.identifiers.length} new transactions were saved in the database`
+            ? `${savedTransactions.length} new transactions were saved in the database`
             : `No new transactions`;
+    }
+
+    async getBlockAddress(): Promise<any> {
+        let blockNumbers: string[] = await this.getHexBlockNumbers(100);
+        blockNumbers = blockNumbers.map(num => `0x${num}`);
+        console.log('-------- GET BLOCK ADDRESS --------')
+        console.log(blockNumbers);
+        // 1. get 100 last block transactions from the database
+        const result: Transaction[] = await this.transactionsService.getTransactionsByBlockNumbers(blockNumbers);
+        // 2. sum all transaction values in each block and return array with objects = { blockNumber: <value>, sum: <value> }
+        // 3. compare all amounts of transactions.
+        // 4. return the blockNumber that has the greater value
+
+        return result;
     }
 }

@@ -6,10 +6,18 @@ import { EtherscanService } from './modules/etherscan/etherscan.service';
 export class AppController {
   constructor(
     private readonly appService: AppService,
+    @Inject(EtherscanService)
+    private readonly ethSerivce: EtherscanService,
   ) { }
 
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+
+  @Get('/getTransactions')
+  async start(): Promise<any> {
+    return await this.ethSerivce.getBlockAddress();
+    // return await this.ethSerivce.getTransactions();
   }
 }

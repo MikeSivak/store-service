@@ -9,7 +9,7 @@ export class Transaction {
     @Column({ type: 'varchar', length: 120 })
     public hash: string;
 
-    @Column({ type: 'varchar', length: 120 })
+    @Column({ type: 'varchar', length: 120, nullable: true })
     public from: string;
 
     @Column({ type: 'varchar', length: 120, nullable: true })
