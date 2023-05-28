@@ -34,7 +34,7 @@ export class EtherscanService {
 
     async getHexBlockNumbers(numOfBlocks: number): Promise<string[]> {
         const endBlock: number = (await axios.get(
-            `${this.etherscanApi}?module=proxy&action=eth_blockNumber`
+            `${this.etherscanApi}?module=proxy&action=eth_blockNumber&apikey=${this.apiKey}`
         )).data.result;
 
         const startBlock: number = endBlock - numOfBlocks;
