@@ -1,10 +1,13 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import Bottleneck from 'bottleneck';
 import { TransactionsService } from '../transactions/transactions.service';
 import { Transaction } from '../transactions/trasaction.entity';
-import { TransactionDto } from '../transactions/transaction.dto';
+import { TransactionDto } from '../transactions/dtos/transaction.dto';
+import { BlockSum } from './types/blockSum.type';
+import { IBlockResponse } from './interfaces/blockResponse.interface';
+import { BlockAddress } from './types/blockAddress.type';
 
 
 @Injectable()
@@ -26,7 +29,7 @@ export class EtherscanService {
         })
     }
 
-    scheduleRequest(endpoint: string): Promise<AxiosResponse<any, any>> {
+    async scheduleRequest(endpoint: string): Promise<IBlockResponse> {
         return this.limiter.schedule(() => {
             return axios.get(endpoint);
         })
@@ -40,28 +43,21 @@ export class EtherscanService {
         const startBlock: number = endBlock - numOfBlocks;
         const diff: number = endBlock - startBlock;
 
-        return Array.from({ length: diff }, (v, k) => (k + startBlock + 1).toString(16));
+        return Array.from({ length: diff }, (v, k) => (k + startBlock + 1).toString(16)).map(num => `0x${num}`);
     }
 
     async getTransactions(): Promise<string> {
         const blockNumbers: string[] = await this.getHexBlockNumbers(100);
-        const blockPromises = blockNumbers.map((num: string) => {
-            let endpoint = `${this.etherscanApi}?module=proxy&action=eth_getBlockByNumber&tag=${num}&boolean=true&apikey=${this.apiKey}`;
+        const blockPromises: Promise<IBlockResponse>[] = blockNumbers.map((num: string) => {
+            let endpoint: string = `${this.etherscanApi}?module=proxy&action=eth_getBlockByNumber&tag=${num}&boolean=true&apikey=${this.apiKey}`;
             return this.scheduleRequest(endpoint);
         });
 
         const transactions: TransactionDto[] = [];
 
-        (await Promise.all(blockPromises)).map((block: AxiosResponse<any, any>) => {
+        (await Promise.all(blockPromises)).map((block: IBlockResponse) => {
             block.data.result.transactions?.map((t: TransactionDto) => {
-                const transaction: TransactionDto = {
-                    hash: t.hash,
-                    blockNumber: t.blockNumber,
-                    from: t.from,
-                    to: t.to,
-                    value: t.value
-                }
-                transactions.push(transaction)
+                transactions.push(t)
             });
         });
 
@@ -74,10 +70,10 @@ export class EtherscanService {
             : `No new transactions`;
     }
 
-    async getBlockAddress(): Promise<any> {
-        let blockNumbers: string[] = (await this.getHexBlockNumbers(100)).map(num => `0x${num}`);
+    async getBlockAddress(): Promise<BlockAddress> {
+        let blockNumbers: string[] = await this.getHexBlockNumbers(100);
         const transactions: Transaction[] = await this.transactionsService.getTransactionsByBlockNumbers(blockNumbers);
-        const amountArr: any = [];
+        const amountArr: BlockSum[] = [];
 
         for (let i: number = 0; i < blockNumbers.length; i++) {
             let sum: number = 0;

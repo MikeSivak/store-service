@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { CronjobsModule } from './modules/cronjobs/cronjobs.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeormService } from './shared/typeorm/typeorm.service';
@@ -17,10 +15,6 @@ import { EtherscanModule } from './modules/etherscan/etherscan.module';
     TransactionsModule,
     TypeOrmModule.forRootAsync({ useClass: TypeormService }),
     EtherscanModule,
-  ],
-  controllers: [AppController],
-  providers: [
-    AppService,
   ],
 })
 export class AppModule { }
