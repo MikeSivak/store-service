@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, InsertResult } from 'typeorm';
+import { Repository } from 'typeorm';
 import { TransactionDto } from './dtos/transaction.dto';
 import { Transaction } from './trasaction.entity';
 import { getArrayAsChunks } from 'src/helpers/chunkArray.helper';
@@ -15,7 +15,7 @@ export class TransactionsService {
 
     async saveTransactions(transactions: TransactionDto[]): Promise<number> {
         const beforeInsertionCount: number = await this.transactionRepository.count();
-        const transactionChunks: Array<TransactionDto>[] = getArrayAsChunks(transactions, 10000);
+        const transactionChunks: Array<TransactionDto>[] = getArrayAsChunks<TransactionDto>(transactions, 10000);
         try {
             await Promise.all(transactionChunks.map(async (chunk: TransactionDto[]) => {
                 return await this.transactionRepository
