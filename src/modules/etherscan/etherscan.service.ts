@@ -12,17 +12,17 @@ import { BlockAddress } from './types/blockAddress.type';
 
 @Injectable()
 export class EtherscanService {
-    private etherscanApi: string;
-    private apiKey: string;
-    private limiter: Bottleneck;
+    private readonly etherscanApi: string;
+    private readonly apiKey: string;
+    private readonly limiter: Bottleneck;
     constructor(
         @Inject(ConfigService)
-        private readonly config: ConfigService,
+        private readonly configService: ConfigService,
         @Inject(TransactionsService)
         private readonly transactionsService: TransactionsService,
     ) {
-        this.etherscanApi = config.get<string>('ETHERSCAN_API');
-        this.apiKey = config.get<string>('ETHERSCAN_API_KEY');
+        this.etherscanApi = configService.get<string>('ETHERSCAN_API');
+        this.apiKey = configService.get<string>('ETHERSCAN_API_KEY');
         this.limiter = new Bottleneck({
             minTime: 333,
             maxConcurrent: 40,
