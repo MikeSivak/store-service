@@ -61,11 +61,13 @@ export class EtherscanService {
             });
         });
 
-        const savedTransactions: Transaction[] = await this.transactionsService.saveTransactions(transactions);
+        // const savedTransactions: Transaction[] = await this.transactionsService.saveTransactions(transactions);
 
-        savedTransactions
-            ? Logger.log(`${savedTransactions.length} new transactions were saved in the database`)
-            : Logger.log('No new transactions');
+        // savedTransactions
+        //     ? Logger.log(`${savedTransactions.length} new transactions were saved in the database`)
+        //     : Logger.log('No new transactions');
+
+        await this.transactionsService.saveTransactions(transactions);
     }
 
     async getBlockAddress(): Promise<BlockAddress> {
