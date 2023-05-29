@@ -46,7 +46,7 @@ export class EtherscanService {
         return Array.from({ length: diff }, (v, k) => (k + startBlock + 1).toString(16)).map(num => `0x${num}`);
     }
 
-    async getTransactions(): Promise<string> {
+    async getTransactions(): Promise<void> {
         const blockNumbers: string[] = await this.getHexBlockNumbers(100);
         const blockPromises: Promise<IBlockResponse>[] = blockNumbers.map((num: string) => {
             let endpoint: string = `${this.etherscanApi}?module=proxy&action=eth_getBlockByNumber&tag=${num}&boolean=true&apikey=${this.apiKey}`;
@@ -63,11 +63,9 @@ export class EtherscanService {
 
         const savedTransactions: Transaction[] = await this.transactionsService.saveTransactions(transactions);
 
-        Logger.log(`${savedTransactions.length} transactions were saved in the database`);
-
-        return savedTransactions
-            ? `${savedTransactions.length} new transactions were saved in the database`
-            : `No new transactions`;
+        savedTransactions
+            ? Logger.log(`${savedTransactions.length} new transactions were saved in the database`)
+            : Logger.log('No new transactions');
     }
 
     async getBlockAddress(): Promise<BlockAddress> {

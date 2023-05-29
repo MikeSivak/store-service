@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { EtherscanService } from './etherscan.service';
+import { BlockAddress } from './types/blockAddress.type';
 
 @Controller('etherscan')
 export class EtherscanController {
@@ -8,7 +9,7 @@ export class EtherscanController {
     ) { }
 
     @Get('/max-sum-block')
-    async getBlockAddress(): Promise<any> {
+    async getBlockAddress(): Promise<BlockAddress> {
         return await this.etherscanService.getBlockAddress();
     }
 }
