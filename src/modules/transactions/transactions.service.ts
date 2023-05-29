@@ -13,23 +13,22 @@ export class TransactionsService {
         private readonly transactionRepository: Repository<Transaction>,
     ) { }
 
-    async saveTransactions(transactions: TransactionDto[]): Promise<any> {
-        const chunks = getArrayAsChunks(transactions, 10000);
-        let result: any;
+    async saveTransactions(transactions: TransactionDto[]): Promise<void> {
+        const transactionChunks: Array<TransactionDto>[] = getArrayAsChunks(transactions, 10000);
         try {
-            result = chunks.map(async chunk => {
-                await this.transactionRepository
+            transactionChunks.map(async (chunk: TransactionDto[]) => {
+                return await this.transactionRepository
                     .createQueryBuilder()
                     .insert()
                     .into(Transaction)
-                    .values(chunk.map(i => i))
+                    .values(chunk)
                     .onConflict(`("hash") DO NOTHING`)
+                    .returning("id")
                     .execute();
             })
         } catch (e) {
             Logger.log(e);
         }
-        return result;
     }
 
     async getTransactionsByBlockNumbers(blockNumbers: string[]): Promise<Transaction[]> {
