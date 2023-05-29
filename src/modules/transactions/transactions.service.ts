@@ -13,10 +13,11 @@ export class TransactionsService {
         private readonly transactionRepository: Repository<Transaction>,
     ) { }
 
-    async saveTransactions(transactions: TransactionDto[]): Promise<void> {
+    async saveTransactions(transactions: TransactionDto[]): Promise<number> {
+        const beforeInsertionCount: number = await this.transactionRepository.count();
         const transactionChunks: Array<TransactionDto>[] = getArrayAsChunks(transactions, 10000);
         try {
-            transactionChunks.map(async (chunk: TransactionDto[]) => {
+            await Promise.all(transactionChunks.map(async (chunk: TransactionDto[]) => {
                 return await this.transactionRepository
                     .createQueryBuilder()
                     .insert()
@@ -25,10 +26,14 @@ export class TransactionsService {
                     .onConflict(`("hash") DO NOTHING`)
                     .returning("id")
                     .execute();
-            })
+            }));
         } catch (e) {
             Logger.log(e);
         }
+        const afterInsertionCount: number = await this.transactionRepository.count();
+        const result: number = afterInsertionCount - beforeInsertionCount;
+
+        return result;
     }
 
     async getTransactionsByBlockNumbers(blockNumbers: string[]): Promise<Transaction[]> {
